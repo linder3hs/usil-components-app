@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">My App Components</string>
+    <string name="title_activity_text_view">TextViewActivity</string>
+    <string name="title_activity_image_view">ImageViewActivity</string>
+    <string name="title_activity_tasks_view">TasksViewActivity</string>
+</resources>
