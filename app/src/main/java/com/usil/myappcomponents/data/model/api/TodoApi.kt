@@ -1,7 +1,14 @@
 package com.usil.myappcomponents.data.model.api
 
 import com.usil.myappcomponents.data.model.ApiResponse
+import com.usil.myappcomponents.data.model.ApiResponses
+import com.usil.myappcomponents.data.model.TodoUpsert
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface TodoApi {
     /*
@@ -13,10 +20,19 @@ interface TodoApi {
     no se hace la logica que se ejecutara
     */
     @GET("todos")
-    suspend fun getTodos(): ApiResponse
+    suspend fun getTodos(): ApiResponses
 
-    // aca van a estar tambien las funciones para editar, crear o eliminar
-    // crear -> post
-    // editar -> put / patch
-    // eliminar -> eliminar
+    @GET("todos/{id}")
+    suspend fun getTodoById(@Path("id") id: Int): ApiResponse
+
+    @POST("todos")
+    suspend fun createTodo(@Body todoUpsert: TodoUpsert): ApiResponse
+
+    @PUT("todos/{id}")
+    suspend fun updateTodo(@Path("id") id: Int, @Body todoUpsert: TodoUpsert): ApiResponse
+
+    @DELETE("todos/{id}")
+    suspend fun deleteTodo(@Path("id") id: Int): ApiResponse
+
+
 }
