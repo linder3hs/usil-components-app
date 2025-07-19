@@ -52,9 +52,13 @@ class TodoViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // vamos a recibir el valor de la pantalla anterior
+        val taskId = intent.getIntExtra("TASK_ID", -1)
+
         setContent {
             MyAppComponentsTheme {
-                TodoMainView()
+                TodoMainView(taskId)
             }
         }
     }
@@ -63,7 +67,7 @@ class TodoViewActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun TodoMainView(viewModel: TodoViewModel = viewModel()) {
+fun TodoMainView(taskId: Int = -1, viewModel: TodoViewModel = viewModel()) {
     val context = LocalContext.current
 
     // Estados locales
@@ -71,16 +75,39 @@ fun TodoMainView(viewModel: TodoViewModel = viewModel()) {
     var isCompleted by remember { mutableStateOf(false) }
     var isNameError by remember { mutableStateOf(false) }
 
+    // variable para saber si estamos en editMode
+    val isEditMode = taskId != -1
+
     // Llamar a las variables del viewModel
     val isLoading by viewModel.isLoading.collectAsState()
     val upsertResult by viewModel.upsertResult.collectAsState()
     val error by viewModel.error.collectAsState()
+    val selectedTodo by viewModel.selectedTodo.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (isEditMode) {
+            // llamo al endpoint para obtener el detalle
+            viewModel.getTodoById(taskId)
+        }
+    }
+
+    LaunchedEffect(selectedTodo) {
+        selectedTodo?.let { todo ->
+            taskName = todo.name
+            isCompleted = todo.isCompleted
+        }
+    }
 
     LaunchedEffect(upsertResult) {
         upsertResult?.let { result ->
             when (result) {
                 is ApiTodoResult.Success -> {
-                    val message = "Tarea creada de forma exitosa"
+                    var message = "Tarea creada de forma exitosa"
+
+                    if (isEditMode) {
+                        message = "Tarea actualizada de forma exitosa"
+                    }
+
                     Toast.makeText(context, message, Toast.LENGTH_SHORT)
                         .show()
                     (context as Activity).finish()
@@ -99,7 +126,7 @@ fun TodoMainView(viewModel: TodoViewModel = viewModel()) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Crear tarea")
+                    Text(if (isEditMode) "Editar Tarea" else "Crear tarea")
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -129,7 +156,11 @@ fun TodoMainView(viewModel: TodoViewModel = viewModel()) {
                 onIsNameError = { isNameError = it },
                 onSaveTask = {
                     viewModel.createTodo(taskName, isCompleted)
-                }
+                },
+                onUpdateTask = {
+                  viewModel.updateTodo(taskName, isCompleted, taskId)
+                },
+                isEditMode
             )
         }
     )
@@ -144,7 +175,9 @@ fun FormUpsertView(
     onTaskNameChange: (String) -> Unit,
     onIsCompleteChange: (Boolean) -> Unit,
     onIsNameError: (Boolean) -> Unit,
-    onSaveTask: () -> Unit
+    onSaveTask: () -> Unit,
+    onUpdateTask: () -> Unit,
+    isEditMode: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -199,9 +232,15 @@ fun FormUpsertView(
         }
         Button(
             onClick = {
-                if (taskName.isNotBlank()) {
-                    onSaveTask()
+                if (isEditMode) {
+                    // llamar a la funcion para actualizar
+                    onUpdateTask()
+                } else {
+                    if (taskName.isNotBlank()) {
+                        onSaveTask()
+                    }
                 }
+
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
@@ -209,7 +248,7 @@ fun FormUpsertView(
             ),
             enabled = taskName.isNotBlank()
         ) {
-            Text("Guardar Tarea")
+            Text(if (isEditMode) "Actualizar Tarea" else "Guardar Tarea")
         }
     }
 }

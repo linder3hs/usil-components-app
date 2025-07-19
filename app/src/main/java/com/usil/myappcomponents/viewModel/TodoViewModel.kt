@@ -91,6 +91,60 @@ class TodoViewModel : ViewModel() {
         }
     }
 
+    fun updateTodo(name: String, isCompleted: Boolean, taskId: Int) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _upsertResult.value = null
+
+                val todoRequest = TodoUpsert(
+                    name = name,
+                    isCompleted = isCompleted
+                )
+
+                val response = api.updateTodo(taskId, todoRequest)
+
+                if (response.success) {
+                    // actualiza la lista de todos con el nuevo elemento
+                    val currentTodos = _todos.value.toMutableList()
+                    currentTodos.add(response.data)
+                    _todos.value = currentTodos
+
+                    _upsertResult.value = ApiTodoResult.Success(response.data)
+                }
+
+            } catch (e: Exception) {
+                val errorMessage = "Error al crear la tarea"
+                _error.value = errorMessage
+                _upsertResult.value = ApiTodoResult.Error(errorMessage)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun getTodoById(id: Int) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+
+                val response = api.getTodoById(id)
+
+                if (response.success) {
+                    _selectedTodo.value = response.data
+                }
+            } catch (e: Exception) {
+                val errorMessage = "Error al obtener la tarea"
+                _error.value = errorMessage
+                _upsertResult.value = ApiTodoResult.Error(errorMessage)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun refreshTodos() {
         getTodos()
     }

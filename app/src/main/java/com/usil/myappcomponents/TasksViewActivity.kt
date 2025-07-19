@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -127,6 +128,7 @@ fun TodoAppView(viewModel: TodoViewModel = viewModel()) {
             FloatingActionButton(
                 onClick = {
                     val intent = Intent(context, TodoViewActivity::class.java)
+                    // pasar a un valor a otra pantalla
                     context.startActivity(intent)
                 }
             ) {
@@ -198,10 +200,15 @@ fun TaskList(
 
 @Composable
 fun TodoCard(todo: Todo) {
+    val context = LocalContext.current
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable {
+            val intent = Intent(context, TodoViewActivity::class.java)
+            intent.putExtra("TASK_ID", todo.id)
+            context.startActivity(intent)
+        },
         colors = CardDefaults.cardColors(Color.White),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             modifier = Modifier
