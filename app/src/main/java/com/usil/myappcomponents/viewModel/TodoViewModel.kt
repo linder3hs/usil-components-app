@@ -3,6 +3,7 @@ package com.usil.myappcomponents.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usil.myappcomponents.data.model.Todo
+import com.usil.myappcomponents.data.model.TodoUpsert
 import com.usil.myappcomponents.data.model.api.TodoApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +53,38 @@ class TodoViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _error.value = "Error en el sistema, comunicate con un admin"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createTodo(name: String, isCompleted: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _upsertResult.value = null
+
+                val todoRequest = TodoUpsert(
+                    name = name,
+                    isCompleted = isCompleted
+                )
+
+                val response = api.createTodo(todoRequest)
+
+                if (response.success) {
+                    // actualiza la lista de todos con el nuevo elemento
+                    val currentTodos = _todos.value.toMutableList()
+                    currentTodos.add(response.data)
+                    _todos.value = currentTodos
+
+                    _upsertResult.value = ApiTodoResult.Success(response.data)
+                }
+            } catch (e: Exception) {
+                val errorMessage = "Error al crear la tarea"
+                _error.value = errorMessage
+                _upsertResult.value = ApiTodoResult.Error(errorMessage)
             } finally {
                 _isLoading.value = false
             }
