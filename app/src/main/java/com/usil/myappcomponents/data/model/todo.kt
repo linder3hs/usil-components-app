@@ -29,6 +29,5 @@ data class Todo(
 
 data class TodoUpsert (
     val name: String,
-    @SerializedName("is_completed")
     val isCompleted: Boolean
 )

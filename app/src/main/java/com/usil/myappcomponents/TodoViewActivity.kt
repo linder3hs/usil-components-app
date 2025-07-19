@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -124,7 +126,10 @@ fun TodoMainView(viewModel: TodoViewModel = viewModel()) {
                 isNameError,
                 onTaskNameChange = { taskName = it },
                 onIsCompleteChange = { isCompleted = it },
-                onIsNameError = { isNameError = it }
+                onIsNameError = { isNameError = it },
+                onSaveTask = {
+                    viewModel.createTodo(taskName, isCompleted)
+                }
             )
         }
     )
@@ -138,7 +143,8 @@ fun FormUpsertView(
     isNameError: Boolean,
     onTaskNameChange: (String) -> Unit,
     onIsCompleteChange: (Boolean) -> Unit,
-    onIsNameError: (Boolean) -> Unit
+    onIsNameError: (Boolean) -> Unit,
+    onSaveTask: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -190,6 +196,20 @@ fun FormUpsertView(
                 text = "Marcar la tarea como completada",
                 fontSize = 16.sp
             )
+        }
+        Button(
+            onClick = {
+                if (taskName.isNotBlank()) {
+                    onSaveTask()
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(R.color.primary)
+            ),
+            enabled = taskName.isNotBlank()
+        ) {
+            Text("Guardar Tarea")
         }
     }
 }

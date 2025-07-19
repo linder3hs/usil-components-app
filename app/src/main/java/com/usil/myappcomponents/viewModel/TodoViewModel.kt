@@ -90,6 +90,10 @@ class TodoViewModel : ViewModel() {
             }
         }
     }
+
+    fun refreshTodos() {
+        getTodos()
+    }
 }
 
 sealed class ApiTodoResult {
