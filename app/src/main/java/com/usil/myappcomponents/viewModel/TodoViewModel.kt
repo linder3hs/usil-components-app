@@ -4,22 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usil.myappcomponents.data.model.Todo
 import com.usil.myappcomponents.data.model.TodoUpsert
-import com.usil.myappcomponents.data.model.api.TodoApi
+import com.usil.myappcomponents.domain.repository.TodoRepository
+import com.usil.myappcomponents.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 // heredar de ViewModel
-class TodoViewModel : ViewModel() {
-    // STADOS: Permite manipular la renderización UI
-    val api: TodoApi = Retrofit.Builder()
-        .baseUrl("https://usil-todo-api.vercel.app/api/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(TodoApi::class.java)
+class TodoViewModel(
+    private val todoRepository: TodoRepository
+) : ViewModel() {
 
     // Estados privado (Estas solo se puede acceder desde la misma clase)
     private val _todos = MutableStateFlow<List<Todo>>(emptyList())
@@ -40,108 +35,110 @@ class TodoViewModel : ViewModel() {
     fun getTodos() {
         // bloque para ejecutar tareas async
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
+            _isLoading.value = true
+            _error.value = null
 
-                val response = api.getTodos()
-
-                if (response.success) {
-                    _todos.value = response.data
-                } else {
-                    _error.value = "Hubo un error al obtener las tareas"
+            when (val result = todoRepository.getTodos()) {
+                is Result.Success -> {
+                    _todos.value = result.data
                 }
-            } catch (e: Exception) {
-                _error.value = "Error en el sistema, comunicate con un admin"
-            } finally {
-                _isLoading.value = false
+
+                is Result.Error -> {
+                    _error.value = result.message
+                }
+
+                is Result.Loading -> {
+                    // TODO: Replace loading logic
+                }
             }
+
+            _isLoading.value = false
         }
     }
 
     fun createTodo(name: String, isCompleted: Boolean = false) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-                _upsertResult.value = null
+            _isLoading.value = true
+            _error.value = null
+            _upsertResult.value = null
 
-                val todoRequest = TodoUpsert(
-                    name = name,
-                    isCompleted = isCompleted
-                )
+            val todoRequest = TodoUpsert(
+                name = name,
+                isCompleted = isCompleted
+            )
 
-                val response = api.createTodo(todoRequest)
-
-                if (response.success) {
-                    // actualiza la lista de todos con el nuevo elemento
+            when (val result = todoRepository.createTodo(todoRequest)) {
+                is Result.Success -> {
                     val currentTodos = _todos.value.toMutableList()
-                    currentTodos.add(response.data)
+                    currentTodos.add(result.data)
                     _todos.value = currentTodos
 
-                    _upsertResult.value = ApiTodoResult.Success(response.data)
+                    _upsertResult.value = ApiTodoResult.Success(result.data)
                 }
-            } catch (e: Exception) {
-                val errorMessage = "Error al crear la tarea"
-                _error.value = errorMessage
-                _upsertResult.value = ApiTodoResult.Error(errorMessage)
-            } finally {
-                _isLoading.value = false
+
+                is Result.Error -> {
+                    _error.value = result.message
+                    _upsertResult.value = ApiTodoResult.Error(result.message)
+                }
+
+                is Result.Loading -> {
+                    // TODO: Replace loading logic
+                }
             }
+            _isLoading.value = false
         }
     }
 
     fun updateTodo(name: String, isCompleted: Boolean, taskId: Int) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-                _upsertResult.value = null
+            _isLoading.value = true
+            _error.value = null
+            _upsertResult.value = null
 
-                val todoRequest = TodoUpsert(
-                    name = name,
-                    isCompleted = isCompleted
-                )
+            val todoRequest = TodoUpsert(
+                name = name,
+                isCompleted = isCompleted
+            )
 
-                val response = api.updateTodo(taskId, todoRequest)
-
-                if (response.success) {
-                    // actualiza la lista de todos con el nuevo elemento
+            when (val result = todoRepository.updatedTodo(taskId, todoRequest)) {
+                is Result.Success -> {
                     val currentTodos = _todos.value.toMutableList()
-                    currentTodos.add(response.data)
+                    currentTodos.add(result.data)
                     _todos.value = currentTodos
 
-                    _upsertResult.value = ApiTodoResult.Success(response.data)
+                    _upsertResult.value = ApiTodoResult.Success(result.data)
                 }
 
-            } catch (e: Exception) {
-                val errorMessage = "Error al crear la tarea"
-                _error.value = errorMessage
-                _upsertResult.value = ApiTodoResult.Error(errorMessage)
-            } finally {
-                _isLoading.value = false
+                is Result.Error -> {
+                    _error.value = result.message
+                    _upsertResult.value = ApiTodoResult.Error(result.message)
+                }
+
+                is Result.Loading -> {
+                    // TODO: Replace loading logic
+                }
             }
+            _isLoading.value = false
         }
     }
 
     fun getTodoById(id: Int) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
+            _isLoading.value = true
+            _error.value = null
 
-                val response = api.getTodoById(id)
-
-                if (response.success) {
-                    _selectedTodo.value = response.data
+            when (val resut = todoRepository.getTodoById(id)) {
+                is Result.Success -> {
+                    _selectedTodo.value = resut.data
                 }
-            } catch (e: Exception) {
-                val errorMessage = "Error al obtener la tarea"
-                _error.value = errorMessage
-                _upsertResult.value = ApiTodoResult.Error(errorMessage)
-            } finally {
-                _isLoading.value = false
+                is Result.Error -> {
+                    _error.value = resut.message
+                }
+                is Result.Loading -> {
+                    // TODO: Replace loading logic
+                }
             }
+            _isLoading.value = false
         }
     }
 

@@ -2,8 +2,6 @@ package com.usil.myappcomponents.data.model
 
 import com.google.gson.annotations.SerializedName
 
-// Vamos a crear el data class para
-// ApiResponse y Todo
 data class ApiResponses(
     val success: Boolean,
     val data: List<Todo>,

@@ -1,4 +1,4 @@
-package com.usil.myappcomponents.data.model.api
+package com.usil.myappcomponents.data.api
 
 import com.usil.myappcomponents.data.model.ApiResponse
 import com.usil.myappcomponents.data.model.ApiResponses
