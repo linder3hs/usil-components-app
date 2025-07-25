@@ -56,9 +56,12 @@ class TodoViewActivity : ComponentActivity() {
         // vamos a recibir el valor de la pantalla anterior
         val taskId = intent.getIntExtra("TASK_ID", -1)
 
+        val app = application as TodoApplication
+        val todoViewModel = app.createTodoViewModel()
+
         setContent {
             MyAppComponentsTheme {
-                TodoMainView(taskId)
+                TodoMainView(taskId = taskId, viewModel = todoViewModel)
             }
         }
     }

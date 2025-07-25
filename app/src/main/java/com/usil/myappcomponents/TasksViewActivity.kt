@@ -74,9 +74,13 @@ class TasksViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val app = application as TodoApplication
+        val todoViewModel = app.createTodoViewModel()
+
         setContent {
             MyAppComponentsTheme {
-                TodoAppView()
+                TodoAppView(viewModel = todoViewModel)
             }
         }
     }
